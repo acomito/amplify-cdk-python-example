@@ -1,0 +1,24 @@
+{
+  "name": "amplify-cdk-python-example",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start:backend": "cd backend && fastapi dev main.py",
+    "start:frontend": "cd frontend && npm start",
+    "start:dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acomito/amplify-cdk-python-example.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/acomito/amplify-cdk-python-example/issues"
+  },
+  "homepage": "https://github.com/acomito/amplify-cdk-python-example#readme",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
