@@ -1,0 +1,44 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+      python: 3.11
+    commands:
+      - n 18
+      - node --version
+      - npm --version
+
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}
+      - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest}
+      # Install frontend dependencies
+      - cd frontend
+      - npm ci
+      - cd ..
+
+  build:
+    commands:
+      # Build frontend
+      - cd frontend
+      - npm run build
+      - cd ..
+      # Build backend Docker image
+      - echo Building the Docker image...
+      - docker build -t ${ECR_REPO_URI}:${IMAGE_TAG} -f backend/Dockerfile backend/
+
+  post_build:
+    commands:
+      - echo Pushing the Docker image...
+      - docker push ${ECR_REPO_URI}:${IMAGE_TAG}
+      - printf '{"ImageURI":"%s"}' ${ECR_REPO_URI}:${IMAGE_TAG} > imageDetail.json
+
+artifacts:
+  files:
+    - imageDetail.json
+    - apprunner.yaml
+    - backend/apprunner.yaml
+    - frontend/dist/**/*
+  base-directory: .
