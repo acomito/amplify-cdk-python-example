@@ -8,10 +8,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Environment files
-./.env.development
-./.env.production
-cdk/.env.development
-cdk/.env.production
+cdk/.env.*
+.env
+.env.*
 
 node_modules
 dist
@@ -42,7 +41,6 @@ __pycache__/
 .Python
 venv/
 ENV/
-.env
 .venv
 env/
 build/
@@ -51,8 +49,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -60,3 +56,6 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+
+# CDK
+cdk.out/
