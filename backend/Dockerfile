@@ -1,5 +1,5 @@
 # Use Python 3.11 slim as the base image for a smaller footprint
-FROM python:3.11-slim as builder
+FROM public.ecr.aws/docker/library/python:3.11-slim as builder
 
 # Set working directory
 WORKDIR /app
@@ -16,7 +16,7 @@ COPY requirements.txt .
 RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/wheels -r requirements.txt
 
 # Start a new stage for the final image
-FROM python:3.11-slim
+FROM public.ecr.aws/docker/library/python:3.11-slim
 
 # Create a non-root user
 RUN useradd -m -u 1001 appuser

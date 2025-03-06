@@ -6,13 +6,14 @@ phases:
       nodejs: 18
       python: 3.11
     commands:
-      - echo "Installing Node.js version 18 ..."
-      - n 18 && rm -rf /tmp/*
+      - echo "Installing dependencies..."
       - node --version
       - npm --version
 
   pre_build:
     commands:
+      # Login to ECR
+      - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${ECR_REPO_URI}
       - IMAGE_TAG=${CODEBUILD_RESOLVED_SOURCE_VERSION:-latest}
       # Install frontend dependencies
@@ -27,12 +28,14 @@ phases:
       - npm run build
       - cd ..
       # Build backend Docker image
-      - echo Building the Docker image...
-      - docker build -t ${ECR_REPO_URI}:${IMAGE_TAG} -f backend/Dockerfile backend/
+      - echo "Building the Docker image..."
+      - cd backend
+      - docker build -t ${ECR_REPO_URI}:${IMAGE_TAG} .
+      - cd ..
 
   post_build:
     commands:
-      - echo Pushing the Docker image...
+      - echo "Pushing the Docker image..."
       - docker push ${ECR_REPO_URI}:${IMAGE_TAG}
       - printf '{"ImageURI":"%s"}' ${ECR_REPO_URI}:${IMAGE_TAG} > imageDetail.json
 

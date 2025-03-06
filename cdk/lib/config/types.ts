@@ -6,6 +6,7 @@ export interface EnvironmentConfig {
   APP_NAME: string;
   ENVIRONMENT: "development" | "production";
   APPRUNNER_GITHUBCONNECTION_ARN: string;
+  DOCKERHUB_USERNAME?: string;
 }
 
 export interface AppRunnerConfig {
