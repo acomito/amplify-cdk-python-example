@@ -45,7 +45,7 @@ export class AmplifyApp extends Construct {
               {
                 pkg: "node",
                 type: "nvm",
-                version: "16.14.0",
+                version: "18",
               },
             ]),
           },

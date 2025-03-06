@@ -121,7 +121,7 @@ export class Pipeline extends Construct {
             phases: {
               install: {
                 "runtime-versions": {
-                  nodejs: "16",
+                  nodejs: "18",
                 },
                 commands: ["cd frontend", "npm ci"],
               },
