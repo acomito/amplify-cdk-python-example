@@ -4,7 +4,8 @@ import { ConfigLoader } from "./config/config-loader";
 import { AmplifyApp } from "./constructs/amplify";
 import { AppRunnerService } from "./constructs/app-runner";
 import { Pipeline } from "./constructs/pipeline";
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as ecr_assets from "aws-cdk-lib/aws-ecr-assets";
+import * as path from "path";
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -14,9 +15,21 @@ export class CdkStack extends cdk.Stack {
       // Load configuration
       const config = ConfigLoader.getInstance().getConfig();
 
+      // Build Docker image using CDK assets
+      const dockerImage = new ecr_assets.DockerImageAsset(
+        this,
+        "BackendImage",
+        {
+          directory: path.join(__dirname, "../../backend"), // Path to your Dockerfile directory
+          platform: ecr_assets.Platform.LINUX_AMD64,
+        }
+      );
+
       // Create App Runner service for backend
       const appRunner = new AppRunnerService(this, "BackendService", {
         config,
+        ecrRepository: dockerImage.repository,
+        imageTag: dockerImage.imageTag,
       });
 
       // Create Amplify app for frontend
