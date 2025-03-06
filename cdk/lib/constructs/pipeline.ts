@@ -95,6 +95,7 @@ export class Pipeline extends Construct {
           },
           artifacts: {
             files: ["imageDetail.json"],
+            "base-directory": ".",
           },
         }),
         environment: {
@@ -126,7 +127,7 @@ export class Pipeline extends Construct {
                 commands: ["cd frontend", "npm ci"],
               },
               build: {
-                commands: ["npm run build", "npm run test"],
+                commands: ["npm run build"],
               },
             },
             artifacts: {

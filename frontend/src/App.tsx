@@ -18,7 +18,7 @@ function App() {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/users`);
 
       if (!response?.ok) {
-        throw new Error(`HTTP error! status: ${response?.status}`);
+        throw new Error(`HTTP error happened with status: ${response?.status}`);
       }
 
       const jsonData = await response.json();
