@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from routes import health, users, data
 from dotenv import load_dotenv
 import os
@@ -11,6 +12,15 @@ app = FastAPI(
     description="A modular FastAPI application with separated routes",
     version="1.0.0",
     debug=os.getenv('DEBUG', 'False').lower() == 'true'
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Your frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers

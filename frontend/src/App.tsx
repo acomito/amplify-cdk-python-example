@@ -1,38 +1,46 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
+import { useState } from "react";
 
-const client = generateClient<Schema>();
+interface ApiResponse {
+  message?: string;
+  // Add other expected response fields here
+}
 
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [data, setData] = useState<ApiResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }, []);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/users`);
+
+      if (!response?.ok) {
+        throw new Error(`HTTP error! status: ${response?.status}`);
+      }
+
+      const jsonData = await response.json();
+      setData(jsonData);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error fetching data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
+      <h1>My python test app</h1>
+      <button onClick={fetchData} disabled={loading}>
+        {loading ? "Loading..." : "Get Python API Response"}
+      </button>
+
+      {error && <p style={{ color: "red" }}>Error: {error}</p>}
+
+      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
     </main>
   );
 }
