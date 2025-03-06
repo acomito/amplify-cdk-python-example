@@ -6,7 +6,8 @@ phases:
       nodejs: 18
       python: 3.11
     commands:
-      - n 18
+      - echo "Installing Node.js version 18 ..."
+      - n 18 && rm -rf /tmp/*
       - node --version
       - npm --version
 
