@@ -90,7 +90,8 @@ export class Pipeline extends Construct {
             post_build: {
               commands: [
                 "docker push ${ECR_REPO_URI}:${IMAGE_TAG}",
-                'echo "{"ImageURI":"${ECR_REPO_URI}:${IMAGE_TAG}"}" > imageDetail.json',
+                'printf \'{"ImageURI":"%s"}\' "${ECR_REPO_URI}:${IMAGE_TAG}" > imageDetail.json',
+                "cat imageDetail.json",
               ],
             },
           },
@@ -198,22 +199,42 @@ export class Pipeline extends Construct {
             project: appRunnerDeploy,
             input: backendBuildOutput,
           }),
-          new codepipeline_actions.CodeBuildAction({
-            actionName: "Deploy_Frontend",
-            project: new codebuild.PipelineProject(this, "AmplifyDeploy", {
-              buildSpec: codebuild.BuildSpec.fromObject({
-                version: "0.2",
-                phases: {
-                  build: {
-                    commands: [
-                      `aws amplify start-job --app-id ${props.amplifyApp.app.attrAppId} --branch-name ${props.amplifyApp.branch.branchName} --job-type RELEASE`,
-                    ],
+          (() => {
+            // Create the Amplify deploy project with a stored reference
+            const amplifyDeployProject = new codebuild.PipelineProject(
+              this,
+              "AmplifyDeploy",
+              {
+                buildSpec: codebuild.BuildSpec.fromObject({
+                  version: "0.2",
+                  phases: {
+                    build: {
+                      commands: [
+                        `aws amplify start-job --app-id ${props.amplifyApp.app.attrAppId} --branch-name ${props.amplifyApp.branch.branchName} --job-type RELEASE`,
+                      ],
+                    },
                   },
-                },
-              }),
-            }),
-            input: frontendBuildOutput,
-          }),
+                }),
+              }
+            );
+
+            // Add Amplify deployment permissions
+            amplifyDeployProject.addToRolePolicy(
+              new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ["amplify:StartJob"],
+                resources: [
+                  `${props.amplifyApp.app.attrArn}/branches/${props.amplifyApp.branch.branchName}/jobs/*`,
+                ],
+              })
+            );
+
+            return new codepipeline_actions.CodeBuildAction({
+              actionName: "Deploy_Frontend",
+              project: amplifyDeployProject,
+              input: frontendBuildOutput,
+            });
+          })(),
         ],
       });
 
