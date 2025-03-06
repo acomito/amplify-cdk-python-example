@@ -84,23 +84,25 @@ export class Pipeline extends Construct {
               commands: [
                 "cd backend",
                 "docker build -t ${ECR_REPO_URI}:${IMAGE_TAG} .",
+                "cd ..",
               ],
             },
             post_build: {
               commands: [
                 "docker push ${ECR_REPO_URI}:${IMAGE_TAG}",
-                "echo '{\"ImageURI\":\"'${ECR_REPO_URI}:${IMAGE_TAG}'\"}' > imageDetail.json",
+                'echo "{"ImageURI":"${ECR_REPO_URI}:${IMAGE_TAG}"}" > imageDetail.json',
               ],
             },
           },
           artifacts: {
             files: ["imageDetail.json"],
             "base-directory": ".",
+            "discard-paths": false,
           },
         }),
         environment: {
           buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-          privileged: true, // Required for Docker builds
+          privileged: true,
         },
         environmentVariables: {
           ECR_REPO_URI: {
@@ -131,7 +133,7 @@ export class Pipeline extends Construct {
               },
             },
             artifacts: {
-              files: ["frontend/build/**/*"],
+              files: ["frontend/dist/**/*"],
               "base-directory": ".",
             },
           }),

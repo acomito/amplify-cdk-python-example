@@ -9,6 +9,7 @@ export interface AppRunnerServiceProps {
   config: StackConfig;
   ecrRepository: ecr.IRepository;
   imageTag?: string;
+  environmentVariables?: { [key: string]: string };
 }
 
 export class AppRunnerService extends Construct {
@@ -45,6 +46,7 @@ export class AppRunnerService extends Construct {
             environmentVariables: {
               ENVIRONMENT: props.config.env.ENVIRONMENT,
               PORT: props.config.appRunner.port.toString(),
+              ...props.environmentVariables,
             },
           },
           repository: props.ecrRepository,

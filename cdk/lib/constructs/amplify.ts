@@ -6,6 +6,7 @@ import { StackConfig } from "../config/types";
 export interface AmplifyAppProps {
   config: StackConfig;
   appRunnerUrl: string;
+  environmentVariables?: { [key: string]: string };
 }
 
 export class AmplifyApp extends Construct {
@@ -49,6 +50,14 @@ export class AmplifyApp extends Construct {
               },
             ]),
           },
+          ...(props.environmentVariables
+            ? Object.entries(props.environmentVariables).map(
+                ([name, value]) => ({
+                  name,
+                  value,
+                })
+              )
+            : []),
         ],
       });
 
@@ -62,6 +71,14 @@ export class AmplifyApp extends Construct {
             name: "ENVIRONMENT",
             value: props.config.env.ENVIRONMENT,
           },
+          ...(props.environmentVariables
+            ? Object.entries(props.environmentVariables).map(
+                ([name, value]) => ({
+                  name,
+                  value,
+                })
+              )
+            : []),
         ],
       });
 
