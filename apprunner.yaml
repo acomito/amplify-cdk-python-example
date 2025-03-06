@@ -1,0 +1,14 @@
+version: 1.0
+runtime: python3
+build:
+  commands:
+    - cd backend
+    - pip install -r requirements.txt
+run:
+  runtime-version: 3.9
+  command: cd backend && python app.py
+  network:
+    port: 8080
+  env:
+    - name: PYTHONUNBUFFERED
+      value: "1"
