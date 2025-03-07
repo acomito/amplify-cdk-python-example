@@ -34,7 +34,7 @@ function App() {
 
   return (
     <main>
-      <h1>My python test app</h1>
+      <h1>Python + React + CDK + App Runner + Amplify = Example App</h1>
       <button onClick={fetchData} disabled={loading}>
         {loading ? "Loading..." : "Get Python API Response"}
       </button>
