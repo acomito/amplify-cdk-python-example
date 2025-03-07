@@ -157,7 +157,7 @@ export class Pipeline extends Construct {
                   "aws --version",
                   'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
                   "unzip awscliv2.zip",
-                  "./aws/install --update",
+                  "sudo ./aws/install --update",
                   "aws --version",
                 ],
               },
@@ -165,13 +165,7 @@ export class Pipeline extends Construct {
                 commands: [
                   "IMAGE_URI=$(cat imageDetail.json | jq -r .ImageURI)",
                   'echo "Deploying image: ${IMAGE_URI}"',
-                  'echo "Updating App Runner service..."',
-                  `aws apprunner update-service \\
-                    --service-arn ${props.appRunner.service.serviceArn} \\
-                    --source-configuration "ImageRepository={ImageIdentifier=\${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=${props.config.appRunner.port}}}" \\
-                    || (echo "App Runner deployment failed" && exit 1)`,
-                  'echo "Waiting for service update to complete..."',
-                  `aws apprunner describe-service --service-arn ${props.appRunner.service.serviceArn} --query 'Service.Status' --output text`,
+                  `aws apprunner update-service --service-arn ${props.appRunner.service.serviceArn} --source-configuration "ImageRepository={ImageIdentifier=\${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=${props.config.appRunner.port}}}"`,
                 ],
               },
             },
@@ -192,19 +186,6 @@ export class Pipeline extends Construct {
             "apprunner:DescribeService",
           ],
           resources: [props.appRunner.service.serviceArn],
-        })
-      );
-
-      // Grant ECR permissions
-      appRunnerDeploy.addToRolePolicy(
-        new iam.PolicyStatement({
-          actions: [
-            "ecr:GetAuthorizationToken",
-            "ecr:BatchCheckLayerAvailability",
-            "ecr:GetDownloadUrlForLayer",
-            "ecr:BatchGetImage",
-          ],
-          resources: ["*"], // ECR authorization token requires resource "*"
         })
       );
 
