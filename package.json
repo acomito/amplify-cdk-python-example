@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start:backend": "cd backend && source venv/bin/activate && fastapi dev main.py",
+    "start:backend": "cd backend && fastapi dev main.py",
     "start:frontend": "cd frontend && npm run dev",
-    "start:dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\""
+    "start:dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:frontend": "cd frontend && npm install",
+    "install:dev": "npm run install:backend && npm run install:frontend"
   },
   "repository": {
     "type": "git",
