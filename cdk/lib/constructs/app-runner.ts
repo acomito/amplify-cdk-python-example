@@ -33,13 +33,12 @@ export class AppRunnerService extends Construct {
       // Create ECR access role
       const accessRole = new iam.Role(this, "AppRunnerECRAccessRole", {
         assumedBy: new iam.ServicePrincipal("build.apprunner.amazonaws.com"),
+        managedPolicies: [
+          iam.ManagedPolicy.fromAwsManagedPolicyName(
+            "service-role/AWSAppRunnerServicePolicyForECRAccess"
+          ),
+        ],
       });
-
-      accessRole.addManagedPolicy(
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "service-role/AWSAppRunnerServicePolicyForECRAccess"
-        )
-      );
 
       // Create shortened service name
       const serviceName =
@@ -51,6 +50,7 @@ export class AppRunnerService extends Construct {
       // Create the App Runner service
       this.service = new apprunner.Service(this, "BackendService", {
         serviceName,
+        accessRole,
         source: apprunner.Source.fromEcr({
           imageConfiguration: {
             port: props.config.appRunner.port,

@@ -55,7 +55,6 @@ export class CdkStack extends cdk.Stack {
         },
       });
 
-      // Create CI/CD pipeline
       new Pipeline(this, "CICDPipeline", {
         config,
         amplifyApp,
