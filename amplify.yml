@@ -16,11 +16,3 @@ frontend:
     paths:
       - frontend/node_modules/**/*
       - frontend/.npm/**/*
-
-backend:
-  phases:
-    build:
-      commands:
-        - cd backend
-        - npm ci
-        - npm run build
