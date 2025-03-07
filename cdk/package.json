@@ -5,7 +5,7 @@
     "cdk": "bin/cdk.js"
   },
   "scripts": {
-    "deploy:app:development": "ENV_FILE='.env.development' cdk deploy  --all",
+    "deploy:app:dev": "ENV_FILE='.env.dev' cdk deploy  --all",
     "deploy:app:production": "ENV_FILE='.env.production' cdk deploy  --all"
   },
   "devDependencies": {
