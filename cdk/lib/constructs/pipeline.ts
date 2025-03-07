@@ -165,7 +165,7 @@ export class Pipeline extends Construct {
                 commands: [
                   "IMAGE_URI=$(cat imageDetail.json | jq -r .ImageURI)",
                   'echo "Deploying image: ${IMAGE_URI}"',
-                  'aws apprunner update-service --service-arn ${props.appRunner.service.serviceArn} --source-configuration "ImageRepository={ImageIdentifier=${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=${props.config.appRunner.port}}"',
+                  'aws apprunner update-service --service-arn $SERVICE_ARN --source-configuration "ImageRepository={ImageIdentifier=${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=$SERVICE_PORT}}"',
                 ],
               },
             },
@@ -173,6 +173,14 @@ export class Pipeline extends Construct {
           environment: {
             buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
             privileged: true,
+          },
+          environmentVariables: {
+            SERVICE_ARN: {
+              value: props.appRunner.service.serviceArn,
+            },
+            SERVICE_PORT: {
+              value: props.config.appRunner.port.toString(),
+            },
           },
         }
       );
