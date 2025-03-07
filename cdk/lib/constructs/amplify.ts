@@ -65,7 +65,7 @@ export class AmplifyApp extends Construct {
       this.branch = new amplify.CfnBranch(this, "MainBranch", {
         appId: this.app.attrAppId,
         branchName: props.config.env.GITHUB_BRANCH,
-        enableAutoBuild: true,
+        enableAutoBuild: false,
         environmentVariables: [
           {
             name: "ENVIRONMENT",
