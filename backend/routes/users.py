@@ -27,7 +27,7 @@ async def get_users():
         # Here you would typically query your database
         # This is just an example response
         return [
-            {"id": 1, "name": "John Doe", "email": "john@example.com", "is_active": True},
+            {"id": 1, "name": "John Smith", "email": "john@example.com", "is_active": True},
             {"id": 2, "name": "Jane Doe", "email": "jane@example.com", "is_active": True}
         ]
     except Exception as e:

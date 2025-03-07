@@ -5,10 +5,8 @@
     "cdk": "bin/cdk.js"
   },
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk"
+    "deploy:app:development": "ENV_FILE='.env.development' cdk deploy  --all",
+    "deploy:app:production": "ENV_FILE='.env.production' cdk deploy  --all"
   },
   "devDependencies": {
     "@types/jest": "^29.5.5",

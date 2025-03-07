@@ -1,4 +1,5 @@
 import { useState } from "react";
+import config from "./config";
 
 interface ApiResponse {
   message?: string;
@@ -15,10 +16,10 @@ function App() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/users`);
+      const response = await fetch(config.apiUrl + "/users");
 
       if (!response?.ok) {
-        throw new Error(`HTTP error! status: ${response?.status}`);
+        throw new Error(`HTTP error happened with status: ${response?.status}`);
       }
 
       const jsonData = await response.json();
@@ -33,7 +34,7 @@ function App() {
 
   return (
     <main>
-      <h1>My python test app</h1>
+      <h1>Python + React + CDK + App Runner + Amplify = Example App</h1>
       <button onClick={fetchData} disabled={loading}>
         {loading ? "Loading..." : "Get Python API Response"}
       </button>

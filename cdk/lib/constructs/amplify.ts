@@ -6,6 +6,7 @@ import { StackConfig } from "../config/types";
 export interface AmplifyAppProps {
   config: StackConfig;
   appRunnerUrl: string;
+  environmentVariables?: { [key: string]: string };
 }
 
 export class AmplifyApp extends Construct {
@@ -45,10 +46,18 @@ export class AmplifyApp extends Construct {
               {
                 pkg: "node",
                 type: "nvm",
-                version: "16.14.0",
+                version: "18",
               },
             ]),
           },
+          ...(props.environmentVariables
+            ? Object.entries(props.environmentVariables).map(
+                ([name, value]) => ({
+                  name,
+                  value,
+                })
+              )
+            : []),
         ],
       });
 
@@ -56,12 +65,20 @@ export class AmplifyApp extends Construct {
       this.branch = new amplify.CfnBranch(this, "MainBranch", {
         appId: this.app.attrAppId,
         branchName: props.config.env.GITHUB_BRANCH,
-        enableAutoBuild: true,
+        enableAutoBuild: false,
         environmentVariables: [
           {
             name: "ENVIRONMENT",
             value: props.config.env.ENVIRONMENT,
           },
+          ...(props.environmentVariables
+            ? Object.entries(props.environmentVariables).map(
+                ([name, value]) => ({
+                  name,
+                  value,
+                })
+              )
+            : []),
         ],
       });
 

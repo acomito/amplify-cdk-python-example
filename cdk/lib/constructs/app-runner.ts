@@ -9,6 +9,7 @@ export interface AppRunnerServiceProps {
   config: StackConfig;
   ecrRepository: ecr.IRepository;
   imageTag?: string;
+  environmentVariables?: { [key: string]: string };
 }
 
 export class AppRunnerService extends Construct {
@@ -29,6 +30,16 @@ export class AppRunnerService extends Construct {
         )
       );
 
+      // Create ECR access role
+      const accessRole = new iam.Role(this, "AppRunnerECRAccessRole", {
+        assumedBy: new iam.ServicePrincipal("build.apprunner.amazonaws.com"),
+        managedPolicies: [
+          iam.ManagedPolicy.fromAwsManagedPolicyName(
+            "service-role/AWSAppRunnerServicePolicyForECRAccess"
+          ),
+        ],
+      });
+
       // Create shortened service name
       const serviceName =
         `${props.config.env.APP_NAME}-${props.config.env.ENVIRONMENT}`.substring(
@@ -39,20 +50,23 @@ export class AppRunnerService extends Construct {
       // Create the App Runner service
       this.service = new apprunner.Service(this, "BackendService", {
         serviceName,
+        accessRole,
         source: apprunner.Source.fromEcr({
           imageConfiguration: {
             port: props.config.appRunner.port,
             environmentVariables: {
               ENVIRONMENT: props.config.env.ENVIRONMENT,
               PORT: props.config.appRunner.port.toString(),
+              ...props.environmentVariables,
             },
           },
           repository: props.ecrRepository,
           tag: props.imageTag || "latest",
         }),
+        vpcConnector: undefined,
+        instanceRole: serviceRole,
         cpu: apprunner.Cpu.ONE_VCPU,
         memory: apprunner.Memory.TWO_GB,
-        instanceRole: serviceRole,
         healthCheck: apprunner.HealthCheck.http({
           path: "/health",
           healthyThreshold: 2,
@@ -61,6 +75,9 @@ export class AppRunnerService extends Construct {
           timeout: cdk.Duration.seconds(2),
         }),
       });
+
+      // Grant ECR pull permissions to App Runner service
+      props.ecrRepository.grantPull(accessRole);
 
       // Add tags
       cdk.Tags.of(this).add("Environment", props.config.env.ENVIRONMENT);

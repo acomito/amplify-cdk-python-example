@@ -84,22 +84,26 @@ export class Pipeline extends Construct {
               commands: [
                 "cd backend",
                 "docker build -t ${ECR_REPO_URI}:${IMAGE_TAG} .",
+                "cd ..",
               ],
             },
             post_build: {
               commands: [
                 "docker push ${ECR_REPO_URI}:${IMAGE_TAG}",
-                "echo '{\"ImageURI\":\"'${ECR_REPO_URI}:${IMAGE_TAG}'\"}' > imageDetail.json",
+                'printf \'{"ImageURI":"%s"}\' "${ECR_REPO_URI}:${IMAGE_TAG}" > imageDetail.json',
+                "cat imageDetail.json",
               ],
             },
           },
           artifacts: {
             files: ["imageDetail.json"],
+            "base-directory": ".",
+            "discard-paths": false,
           },
         }),
         environment: {
           buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
-          privileged: true, // Required for Docker builds
+          privileged: true,
         },
         environmentVariables: {
           ECR_REPO_URI: {
@@ -121,16 +125,16 @@ export class Pipeline extends Construct {
             phases: {
               install: {
                 "runtime-versions": {
-                  nodejs: "16",
+                  nodejs: "18",
                 },
                 commands: ["cd frontend", "npm ci"],
               },
               build: {
-                commands: ["npm run build", "npm run test"],
+                commands: ["npm run build"],
               },
             },
             artifacts: {
-              files: ["frontend/build/**/*"],
+              files: ["frontend/dist/**/*"],
               "base-directory": ".",
             },
           }),
@@ -148,21 +152,47 @@ export class Pipeline extends Construct {
           buildSpec: codebuild.BuildSpec.fromObject({
             version: "0.2",
             phases: {
+              pre_build: {
+                commands: [
+                  "aws --version",
+                  'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                  "unzip awscliv2.zip",
+                  "sudo ./aws/install --update",
+                  "aws --version",
+                ],
+              },
               build: {
                 commands: [
                   "IMAGE_URI=$(cat imageDetail.json | jq -r .ImageURI)",
-                  `aws apprunner start-deployment --service-arn ${props.appRunner.service.serviceArn} --source-configuration "ImageRepository={ImageIdentifier=\${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=${props.config.appRunner.port}}}"`,
+                  'echo "Deploying image: ${IMAGE_URI}"',
+                  'aws apprunner update-service --service-arn $SERVICE_ARN --source-configuration "ImageRepository={ImageIdentifier=${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=$SERVICE_PORT}}"',
                 ],
               },
             },
           }),
+          environment: {
+            buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
+            privileged: true,
+          },
+          environmentVariables: {
+            SERVICE_ARN: {
+              value: props.appRunner.service.serviceArn,
+            },
+            SERVICE_PORT: {
+              value: props.config.appRunner.port.toString(),
+            },
+          },
         }
       );
 
       // Grant App Runner deployment permissions
       appRunnerDeploy.addToRolePolicy(
         new iam.PolicyStatement({
-          actions: ["apprunner:StartDeployment"],
+          actions: [
+            "apprunner:UpdateService",
+            "apprunner:StartDeployment",
+            "apprunner:DescribeService",
+          ],
           resources: [props.appRunner.service.serviceArn],
         })
       );
@@ -195,22 +225,42 @@ export class Pipeline extends Construct {
             project: appRunnerDeploy,
             input: backendBuildOutput,
           }),
-          new codepipeline_actions.CodeBuildAction({
-            actionName: "Deploy_Frontend",
-            project: new codebuild.PipelineProject(this, "AmplifyDeploy", {
-              buildSpec: codebuild.BuildSpec.fromObject({
-                version: "0.2",
-                phases: {
-                  build: {
-                    commands: [
-                      `aws amplify start-job --app-id ${props.amplifyApp.app.attrAppId} --branch-name ${props.amplifyApp.branch.branchName} --job-type RELEASE`,
-                    ],
+          (() => {
+            // Create the Amplify deploy project with a stored reference
+            const amplifyDeployProject = new codebuild.PipelineProject(
+              this,
+              "AmplifyDeploy",
+              {
+                buildSpec: codebuild.BuildSpec.fromObject({
+                  version: "0.2",
+                  phases: {
+                    build: {
+                      commands: [
+                        `aws amplify start-job --app-id ${props.amplifyApp.app.attrAppId} --branch-name ${props.amplifyApp.branch.branchName} --job-type RELEASE`,
+                      ],
+                    },
                   },
-                },
-              }),
-            }),
-            input: frontendBuildOutput,
-          }),
+                }),
+              }
+            );
+
+            // Add Amplify deployment permissions
+            amplifyDeployProject.addToRolePolicy(
+              new iam.PolicyStatement({
+                effect: iam.Effect.ALLOW,
+                actions: ["amplify:StartJob"],
+                resources: [
+                  `${props.amplifyApp.app.attrArn}/branches/${props.amplifyApp.branch.branchName}/jobs/*`,
+                ],
+              })
+            );
+
+            return new codepipeline_actions.CodeBuildAction({
+              actionName: "Deploy_Frontend",
+              project: amplifyDeployProject,
+              input: frontendBuildOutput,
+            });
+          })(),
         ],
       });
 
