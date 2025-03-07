@@ -1,9 +1,21 @@
 import { useState } from "react";
 import config from "./config";
+import Plot from "react-plotly.js";
+import { Data, Layout } from "plotly.js";
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  is_active: boolean;
+}
 
 interface ApiResponse {
-  message?: string;
-  // Add other expected response fields here
+  users: User[];
+  plot: {
+    data: Data[];
+    layout: Partial<Layout>;
+  };
 }
 
 function App() {
@@ -41,7 +53,19 @@ function App() {
 
       {error && <p style={{ color: "red" }}>Error: {error}</p>}
 
-      {data && <pre>{JSON.stringify(data, null, 2)}</pre>}
+      {data?.plot && (
+        <div style={{ marginTop: "2rem" }}>
+          <h2>User Activity Plot</h2>
+          <Plot
+            data={data.plot.data}
+            layout={{
+              ...data.plot.layout,
+              width: 720,
+              height: 480,
+            }}
+          />
+        </div>
+      )}
     </main>
   );
 }
