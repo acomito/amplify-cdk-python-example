@@ -152,22 +152,59 @@ export class Pipeline extends Construct {
           buildSpec: codebuild.BuildSpec.fromObject({
             version: "0.2",
             phases: {
+              pre_build: {
+                commands: [
+                  "aws --version",
+                  'curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"',
+                  "unzip awscliv2.zip",
+                  "./aws/install --update",
+                  "aws --version",
+                ],
+              },
               build: {
                 commands: [
                   "IMAGE_URI=$(cat imageDetail.json | jq -r .ImageURI)",
-                  `aws apprunner start-deployment --service-arn ${props.appRunner.service.serviceArn} --source-configuration "ImageRepository={ImageIdentifier=\${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=${props.config.appRunner.port}}}"`,
+                  'echo "Deploying image: ${IMAGE_URI}"',
+                  'echo "Updating App Runner service..."',
+                  `aws apprunner update-service \\
+                    --service-arn ${props.appRunner.service.serviceArn} \\
+                    --source-configuration "ImageRepository={ImageIdentifier=\${IMAGE_URI},ImageRepositoryType=ECR,ImageConfiguration={Port=${props.config.appRunner.port}}}" \\
+                    || (echo "App Runner deployment failed" && exit 1)`,
+                  'echo "Waiting for service update to complete..."',
+                  `aws apprunner describe-service --service-arn ${props.appRunner.service.serviceArn} --query 'Service.Status' --output text`,
                 ],
               },
             },
           }),
+          environment: {
+            buildImage: codebuild.LinuxBuildImage.STANDARD_5_0,
+            privileged: true,
+          },
         }
       );
 
       // Grant App Runner deployment permissions
       appRunnerDeploy.addToRolePolicy(
         new iam.PolicyStatement({
-          actions: ["apprunner:StartDeployment"],
+          actions: [
+            "apprunner:UpdateService",
+            "apprunner:StartDeployment",
+            "apprunner:DescribeService",
+          ],
           resources: [props.appRunner.service.serviceArn],
+        })
+      );
+
+      // Grant ECR permissions
+      appRunnerDeploy.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: [
+            "ecr:GetAuthorizationToken",
+            "ecr:BatchCheckLayerAvailability",
+            "ecr:GetDownloadUrlForLayer",
+            "ecr:BatchGetImage",
+          ],
+          resources: ["*"], // ECR authorization token requires resource "*"
         })
       );
 
