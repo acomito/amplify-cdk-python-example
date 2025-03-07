@@ -6,4 +6,6 @@ const config = {
     : `${window.location.origin}${apiUrl}`,
 };
 
+console.log({ config });
+
 export default config;
