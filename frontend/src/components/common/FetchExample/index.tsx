@@ -4,6 +4,8 @@ import Plot from "react-plotly.js";
 import { Data, Layout } from "plotly.js";
 import { ComponentType } from "react";
 import { Button } from "@/components/ui/button";
+import { fetchAuthSession } from "aws-amplify/auth";
+import "@/lib/amplify-config";
 
 interface User {
   id: number;
@@ -37,7 +39,18 @@ function FetchExample() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(config.apiUrl + "/users");
+      const { tokens } = await fetchAuthSession();
+      const idToken = tokens?.idToken?.toString();
+
+      if (!idToken) {
+        throw new Error("No authentication token available");
+      }
+
+      const response = await fetch(config.apiUrl + "/users", {
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+        },
+      });
 
       if (!response?.ok) {
         throw new Error(`HTTP error happened with status: ${response?.status}`);
