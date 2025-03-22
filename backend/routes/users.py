@@ -1,13 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 import plotly.graph_objects as go
 import plotly.utils
 import json
+from auth.cognito import cognito_scheme
 
 router = APIRouter(
     prefix="/users",
-    tags=["users"]
+    tags=["users"],
+    dependencies=[Depends(cognito_scheme)]  # Apply Cognito auth to all endpoints in this router
 )
 
 class UserBase(BaseModel):

@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start:backend": "cd backend && fastapi dev main.py",
+    "start": "npm run start:dev",
+    "start:backend": "cd backend && uvicorn main:app --reload",
     "start:frontend": "cd frontend && npm run dev",
     "start:dev": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "install:backend": "cd backend && pip install -r requirements.txt",
     "install:frontend": "cd frontend && npm install",
-    "install:dev": "npm run install:backend && npm run install:frontend"
+    "install:dev": "npm run install:backend && npm run install:frontend",
+    "docker:dev": "docker-compose up --build",
+    "docker:dev:rebuild": "docker-compose up --build --force-recreate",
+    "docker:down": "docker-compose down",
+    "docker:clean": "docker-compose down -v --remove-orphans"
   },
   "repository": {
     "type": "git",
@@ -22,6 +27,7 @@
   "homepage": "https://github.com/acomito/amplify-cdk-python-example#readme",
   "description": "",
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "kill-port": "^2.0.1"
   }
 }

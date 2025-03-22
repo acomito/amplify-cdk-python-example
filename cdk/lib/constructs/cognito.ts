@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 import { StackConfig } from "../config/types";
 
@@ -15,6 +16,21 @@ export class CognitoAuth extends Construct {
     super(scope, id);
 
     try {
+      // Create the email validation Lambda
+      const emailValidationLambda = new lambda.Function(
+        this,
+        "EmailValidationLambda",
+        {
+          runtime: lambda.Runtime.PYTHON_3_9,
+          handler: "validate_email.handler",
+          code: lambda.Code.fromAsset("lambda/auth"),
+          timeout: cdk.Duration.seconds(30),
+          environment: {
+            NODE_ENV: props.config.env.ENVIRONMENT,
+          },
+        }
+      );
+
       // Create the user pool
       this.userPool = new cognito.UserPool(this, "UserPool", {
         userPoolName: `${props.config.env.APP_NAME}-${props.config.env.ENVIRONMENT}-pool`,
@@ -40,6 +56,9 @@ export class CognitoAuth extends Construct {
         },
         accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
         removalPolicy: cdk.RemovalPolicy.DESTROY, // For development - change for production
+        lambdaTriggers: {
+          preSignUp: emailValidationLambda,
+        },
       });
 
       // Create the client app
