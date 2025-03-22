@@ -1,7 +1,9 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import AuthLogin from "./pages/auth-login";
 import AuthSignup from "./pages/auth-signup";
+import AuthConfirmCode from "./pages/auth-confirm-code";
 import AppHome from "./pages/app-home";
+import { ProtectedRoute } from "./components/protected-route";
 
 export const router = createBrowserRouter([
   {
@@ -17,7 +19,15 @@ export const router = createBrowserRouter([
     element: <AuthSignup />,
   },
   {
+    path: "/confirm",
+    element: <AuthConfirmCode />,
+  },
+  {
     path: "/app",
-    element: <AppHome />,
+    element: (
+      <ProtectedRoute>
+        <AppHome />
+      </ProtectedRoute>
+    ),
   },
 ]);

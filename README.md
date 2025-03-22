@@ -131,3 +131,7 @@ Please see [CONTRIBUTING.md](frontend/CONTRIBUTING.md) for details on our code o
 ## License
 
 ISC - See [LICENSE](frontend/LICENSE) for details.
+
+# TODO:
+
+Add a retool admin panel for dynamodb: https://www.youtube.com/watch?v=Zds3lP3CCHc&ab_channel=Retool

@@ -40,6 +40,10 @@ export class CdkStack extends cdk.Stack {
           COGNITO_USER_POOL_ID: cognitoAuth.userPool.userPoolId,
           COGNITO_CLIENT_ID: cognitoAuth.userPoolClient.userPoolClientId,
           COGNITO_REGION: this.region,
+          APP_ENV: "development",
+          DEBUG: "True",
+          API_KEY: "your_api_key_here",
+          DATABASE_URL: "postgresql://user:password@localhost:5432/dbname",
         },
       });
 

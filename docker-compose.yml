@@ -13,19 +13,3 @@ services:
       - DEBUG=True
       - APP_ENV=development
     restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_URL=http://backend:8000
-      - PORT=5173
-    depends_on:
-      - backend
-    restart: unless-stopped 

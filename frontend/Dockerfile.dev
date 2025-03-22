@@ -1,20 +1,25 @@
-# Official Image using node 20 alphine
-FROM node:20-alpine  
+# Builder stage
+FROM node:lts-alpine as builder
 
-# working directory 
-WORKDIR /app/frontend
+WORKDIR /app
+# vite will be installed in npm global directory
+RUN npm install -g vite
 
-# Changes in package* . json file 
 COPY package*.json ./
+RUN npm install --omit=dev
 
-# Install Dependencies (including dev dependencies)
-RUN npm install --include=dev
-
-# Copy all changes on frontend
 COPY . .
+RUN npm run build
 
-# expose the app on port 5173
+# Final stage
+FROM node:lts-alpine
+
+WORKDIR /app
+# copy built files from builder stage
+COPY --from=builder /app /app
+
+USER node
+
 EXPOSE 5173
 
-# Start your frontend application
-CMD [ "npm", "run", "dev", "--", "--host", "0.0.0.0"]
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

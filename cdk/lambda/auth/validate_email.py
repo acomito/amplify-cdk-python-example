@@ -4,7 +4,7 @@ def handler(event, context):
         email = event['request']['userAttributes'].get('email', '').lower()
         
         # Check if email contains 'psm'
-        if 'psm' not in email.split('@')[1]:
+        if 'gmail' not in email.split('@')[1]:
             raise Exception('Email domain must contain "psm"')
             
         # Return the event object back to Cognito
