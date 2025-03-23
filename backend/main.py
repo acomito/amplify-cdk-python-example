@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import health, users, data
+from routes import health, users, data, customers
 from dotenv import load_dotenv
 import os
 
@@ -27,6 +27,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(users.router)
 app.include_router(data.router)
+app.include_router(customers.router)
 
 @app.get("/")
 async def root():
