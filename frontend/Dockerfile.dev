@@ -1,0 +1,25 @@
+# Builder stage
+FROM node:lts-alpine as builder
+
+WORKDIR /app
+# vite will be installed in npm global directory
+RUN npm install -g vite
+
+COPY package*.json ./
+RUN npm install --omit=dev
+
+COPY . .
+RUN npm run build
+
+# Final stage
+FROM node:lts-alpine
+
+WORKDIR /app
+# copy built files from builder stage
+COPY --from=builder /app /app
+
+USER node
+
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

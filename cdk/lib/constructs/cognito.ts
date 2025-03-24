@@ -1,10 +1,12 @@
 import * as cdk from "aws-cdk-lib";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Construct } from "constructs";
 import { StackConfig } from "../config/types";
 
 export interface CognitoAuthProps {
   config: StackConfig;
+  usersTable: cdk.aws_dynamodb.Table;
 }
 
 export class CognitoAuth extends Construct {
@@ -15,14 +17,38 @@ export class CognitoAuth extends Construct {
     super(scope, id);
 
     try {
-      // Create the user pool
+      // Create Lambda for email validation
+      const emailValidationLambda = new lambda.Function(
+        this,
+        "EmailValidationFunction",
+        {
+          runtime: lambda.Runtime.PYTHON_3_11,
+          handler: "validate_email.handler",
+          code: lambda.Code.fromAsset("lambda/auth"),
+          environment: {
+            APP_ENV: props.config.env.ENVIRONMENT,
+          },
+        }
+      );
+
+      // Create Lambda for post-signup user creation
+      const createUserLambda = new lambda.Function(this, "CreateUserFunction", {
+        runtime: lambda.Runtime.PYTHON_3_11,
+        handler: "create_user.handler",
+        code: lambda.Code.fromAsset("lambda/auth"),
+        environment: {
+          DYNAMODB_USERS_TABLE: props.usersTable.tableName,
+        },
+      });
+
+      // Grant DynamoDB permissions to the create user Lambda
+      props.usersTable.grantWriteData(createUserLambda);
+
+      // Create User Pool
       this.userPool = new cognito.UserPool(this, "UserPool", {
-        userPoolName: `${props.config.env.APP_NAME}-${props.config.env.ENVIRONMENT}-pool`,
+        userPoolName: `${props.config.env.APP_NAME}-${props.config.env.ENVIRONMENT}-user-pool`,
         selfSignUpEnabled: true,
         signInAliases: {
-          email: true,
-        },
-        autoVerify: {
           email: true,
         },
         standardAttributes: {
@@ -39,7 +65,14 @@ export class CognitoAuth extends Construct {
           requireSymbols: true,
         },
         accountRecovery: cognito.AccountRecovery.EMAIL_ONLY,
-        removalPolicy: cdk.RemovalPolicy.DESTROY, // For development - change for production
+        removalPolicy:
+          props.config.env.ENVIRONMENT === "production"
+            ? cdk.RemovalPolicy.RETAIN
+            : cdk.RemovalPolicy.DESTROY,
+        lambdaTriggers: {
+          preSignUp: emailValidationLambda,
+          postConfirmation: createUserLambda,
+        },
       });
 
       // Create the client app

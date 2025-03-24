@@ -4,12 +4,46 @@ __pycache__/
 *$py.class
 *.so
 .Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
 venv/
 ENV/
-env/
-.env
-.env.*
-!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
 
 # Development
 .git
@@ -26,19 +60,12 @@ htmlcov/
 .tox/
 .nox/
 
-# Logs
-*.log
-logs/
-
-# System
-.DS_Store
-Thumbs.db
-
 # Documentation
 docs/
 *.md
 !README.md
 
-# Docker
-Dockerfile
-.dockerignore 
+# System
+.env
+.env.*
+!.env.example 
